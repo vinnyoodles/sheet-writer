@@ -1,6 +1,7 @@
 package sheets
 
 import (
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -10,10 +11,12 @@ import (
 	"strings"
 )
 
+var RANGE_DELIMITER = ':'
+
 func Scopes() []string {
 	return []string{
-		"https://www.googleapis.com/auth/drive.readonly",
-		"https://www.googleapis.com/auth/spreadsheets.readonly",
+		"https://www.googleapis.com/auth/drive",
+		"https://www.googleapis.com/auth/spreadsheets",
 	}
 }
 
@@ -47,25 +50,40 @@ func Fetch(drv *drive.Service) []string {
 	output := []string{}
 	query := "mimeType='application/vnd.google-apps.spreadsheet'"
 	response, err := drv.Files.List().Q(query).Do()
- 	if err != nil {
+	if err != nil {
 		return output
- 	}
- 	for i := 0; i < len(response.Files); i++ {
+	}
+	for i := 0; i < len(response.Files); i++ {
 		output = append(output, response.Files[i].Id)
- 	}
+	}
 	return output
-}
-
-func Create() bool {
-	return false
 }
 
 func Write() bool {
 	return false
 }
 
-func Append() bool {
-	return false
+func Append(srv *sheets.Service, sheetID string, values [][]interface{}) bool {
+	ctx := context.Background()
+	valueInputOption := "USER_ENTERED"
+	insertDataOption := "INSERT_ROWS"
+	maxLength := 0
+	for i := 0; i < len(values); i++ {
+		if len(values[i]) > maxLength {
+			maxLength = len(values[i])
+		}
+	}
+	sheetRange := _getRange(0 /*start index*/, maxLength)
+	body := &sheets.ValueRange{
+		MajorDimension: "ROWS",
+		Range:          sheetRange,
+		Values:         values,
+	}
+	_, err := srv.Spreadsheets.Values.Append(sheetID, sheetRange, body).ValueInputOption(valueInputOption).InsertDataOption(insertDataOption).Context(ctx).Do()
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func RowCount() int {
@@ -86,3 +104,10 @@ func Headers(srv *sheets.Service, id string) []string {
 	return output
 }
 
+func _getRange(startIndex int, length int) string {
+	startIndex += 97
+	start := rune(startIndex)
+	end := rune(startIndex + length)
+	return string([]rune{start, rune(RANGE_DELIMITER), end})
+
+}
