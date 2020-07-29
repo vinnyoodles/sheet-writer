@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sheetwriter/sheets"
+	"github.com/sheetwriter/discord"
 )
 
 func main() {
@@ -23,8 +24,10 @@ func main() {
 				values[idx][idx2] = s
 			}
 		}
-		result := sheets.Append(srv, sheetIDs[i], values)
-		fmt.Println(result)
-
+		// result := sheets.Append(srv, sheetIDs[i], values)
+		// fmt.Println(result)
 	}
+
+	session := discord.CreateSession()
+	fmt.Printf("%d", session)
 }

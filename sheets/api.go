@@ -59,10 +59,6 @@ func Fetch(drv *drive.Service) []string {
 	return output
 }
 
-func Write() bool {
-	return false
-}
-
 func Append(srv *sheets.Service, sheetID string, values [][]interface{}) bool {
 	ctx := context.Background()
 	valueInputOption := "USER_ENTERED"
@@ -86,10 +82,6 @@ func Append(srv *sheets.Service, sheetID string, values [][]interface{}) bool {
 	return true
 }
 
-func RowCount() int {
-	return 0
-}
-
 func Headers(srv *sheets.Service, id string) []string {
 	output := []string{}
 	sheetRange := "A1:1"
@@ -109,5 +101,4 @@ func _getRange(startIndex int, length int) string {
 	start := rune(startIndex)
 	end := rune(startIndex + length)
 	return string([]rune{start, rune(RANGE_DELIMITER), end})
-
 }
