@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/sheetwriter/sheets"
 	"github.com/sheetwriter/discord"
+	"github.com/sheetwriter/sheets"
 )
 
 func main() {
@@ -30,4 +30,5 @@ func main() {
 
 	session := discord.CreateSession()
 	fmt.Printf("%d", session)
+	discord.Run(session)
 }

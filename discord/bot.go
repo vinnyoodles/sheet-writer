@@ -1,17 +1,20 @@
- package discord
+package discord
 
 import (
-	"log"
-	"fmt"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type BotCredentials struct {
-	Token string `json:"token"` 
+	Token string `json:"token"`
 }
- 
+
 func CreateSession() *discordgo.Session {
 	byt, err := ioutil.ReadFile("bot.json")
 	if err != nil {
@@ -25,8 +28,23 @@ func CreateSession() *discordgo.Session {
 	}
 	session, err := discordgo.New(fmt.Sprintf("Bot %s", creds.Token))
 	if err != nil {
-		log.Fatalf("Failed to create discord session")
+		log.Fatalf("Failed to create discord session: %v", err)
 		return nil
 	}
 	return session
+}
+
+func Run(session *discordgo.Session) {
+	err := session.Open()
+	if err != nil {
+		log.Fatalf("Failed to open discord socket: %v", err)
+		return
+	}
+	// Listen to syscalls to stop running
+	channel := make(chan os.Signal, 1)
+	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+
+	// Wait until one of the above signals are sent
+	<-channel
+	session.Close()
 }
