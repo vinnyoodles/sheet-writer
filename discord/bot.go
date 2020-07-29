@@ -31,6 +31,8 @@ func CreateSession() *discordgo.Session {
 		log.Fatalf("Failed to create discord session: %v", err)
 		return nil
 	}
+
+	session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessage)
 	return session
 }
 
