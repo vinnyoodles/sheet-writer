@@ -13,18 +13,17 @@ type BotCredentials struct {
 }
  
 func CreateSession() *discordgo.Session {
-	var data map[string]interface{}
 	byt, err := ioutil.ReadFile("bot.json")
 	if err != nil {
 		log.Fatalf("Failed reading bot file: %v", err)
 		return nil
 	}
-	if err := json.Unmarshal(byt, &data); err != nil {
+	creds := BotCredentials{}
+	if err := json.Unmarshal(byt, &creds); err != nil {
 		log.Fatalf("Failed reading bot file: %v", err)
 		return nil
 	}
-	token := data["token"]
-	session, err := discordgo.New(fmt.Sprintf("Bot %s", token))
+	session, err := discordgo.New(fmt.Sprintf("Bot %s", creds.Token))
 	if err != nil {
 		log.Fatalf("Failed to create discord session")
 		return nil
