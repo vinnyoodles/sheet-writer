@@ -29,6 +29,5 @@ func main() {
 	}
 
 	session := discord.CreateSession()
-	fmt.Printf("%d", session)
 	discord.Run(session)
 }

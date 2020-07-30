@@ -1,0 +1,8 @@
+{
+  "commands": [
+  	{
+  		"function": "AppendSheet",
+  		"prefix": "@add"
+  	}
+  ]
+}

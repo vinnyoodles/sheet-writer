@@ -8,11 +8,42 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
 type BotCredentials struct {
 	Token string `json:"token"`
+}
+
+type Commands struct {
+	Commands []BotCommand `json:"commands"`
+}
+
+type BotCommand struct {
+	Function string `json:"function"`
+	Prefix   string `json:"prefix"`
+}
+
+var CommandMap map[string]BotCommand
+
+var FunctionMap = map[string]func([]string){
+	"AppendSheet": AppendSheet,
+}
+
+func init() {
+	byt, err := ioutil.ReadFile("commands.json")
+	if err != nil {
+		log.Fatalf("Failed reading commands file: %v", err)
+		return
+	}
+	CommandMap = make(map[string]BotCommand)
+	commands := Commands{}
+	json.Unmarshal(byt, &commands)
+	for i := 0; i < len(commands.Commands); i++ {
+		cmd := commands.Commands[i]
+		CommandMap[cmd.Prefix] = cmd
+	}
 }
 
 func CreateSession() *discordgo.Session {
@@ -51,11 +82,25 @@ func Run(session *discordgo.Session) {
 	session.Close()
 }
 
+func AppendSheet(args []string) {
+	fmt.Println(args)
+}
+
 func messageListen(session *discordgo.Session, message *discordgo.MessageCreate) {
 	if message.Author.ID == session.State.User.ID {
-		// ignore bot messages
+		// Ignore bot messages
 		return
 	}
 	content := message.Content
-	fmt.Println(content)
+	tokens := strings.Fields(content)
+	if len(tokens) == 0 {
+		return
+	}
+
+	cmd, ok := CommandMap[tokens[0]]
+	if !ok {
+		return
+	}
+
+	FunctionMap[cmd.Function](tokens[1:])
 }
