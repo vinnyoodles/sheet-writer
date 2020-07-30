@@ -31,8 +31,8 @@ func CreateSession() *discordgo.Session {
 		log.Fatalf("Failed to create discord session: %v", err)
 		return nil
 	}
-
-	session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessage)
+	session.AddHandler(messageListen)
+	session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
 	return session
 }
 
@@ -49,4 +49,13 @@ func Run(session *discordgo.Session) {
 	// Wait until one of the above signals are sent
 	<-channel
 	session.Close()
+}
+
+func messageListen(session *discordgo.Session, message *discordgo.MessageCreate) {
+	if message.Author.ID == session.State.User.ID {
+		// ignore bot messages
+		return
+	}
+	content := message.Content
+	fmt.Println(content)
 }
