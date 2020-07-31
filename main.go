@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"github.com/sheetwriter/discord"
 	"github.com/sheetwriter/sheets"
+	"time"
 )
 
 var DateTimeFormat = "1/2/2006 03:04 PM"
@@ -37,4 +37,3 @@ func AppendSheet(args []string) {
 	wrapper[0] = values
 	sheets.Append(sheetID, wrapper)
 }
-

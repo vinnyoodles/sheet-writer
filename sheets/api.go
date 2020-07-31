@@ -1,6 +1,8 @@
 package sheets
 
 import (
+	"encoding/json"
+	"fmt"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -9,8 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-	"encoding/json"
-	"fmt"
 )
 
 type Config struct {
@@ -36,7 +36,6 @@ func init() {
 	}
 	SheetDatabaseID = config.DatabaseID
 }
-
 
 func Scopes() []string {
 	return []string{
@@ -86,7 +85,7 @@ func Fetch() []string {
 
 func FetchID(name string) string {
 	headers := Headers(SheetDatabaseID)
-	for i := 0; i < len(headers); i ++ {
+	for i := 0; i < len(headers); i++ {
 		if headers[i] != name {
 			continue
 		}
