@@ -10,6 +10,7 @@ import (
 	"google.golang.org/api/sheets/v4"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -24,6 +25,11 @@ var SheetDatabaseID string
 
 func init() {
 	DriveService, SheetsService = CreateServices()
+	val, ok := os.LookupEnv("DATABASE_ID")
+	if ok {
+		SheetDatabaseID = val
+		return
+	}
 	byt, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Fatalf("Failed reading config file: %v", err)
@@ -45,10 +51,17 @@ func Scopes() []string {
 }
 
 func CreateServices() (*drive.Service, *sheets.Service) {
-	data, err := ioutil.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Failed reading credentials file: %v", err)
-		return nil, nil
+	var data []byte
+	val, ok := os.LookupEnv("GOOGLE_CREDENTIALS")
+	if ok {
+		data = []byte(val)
+	} else {
+		byt, err := ioutil.ReadFile("credentials.json")
+		if err != nil {
+			log.Fatalf("Failed reading credentials file: %v", err)
+			return nil, nil
+		}
+		data = byt
 	}
 	scopes := Scopes()
 	config, err := google.JWTConfigFromJSON(data, strings.Join(scopes, " "))

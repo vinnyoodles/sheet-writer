@@ -48,17 +48,25 @@ func init() {
 }
 
 func CreateSession() *discordgo.Session {
-	byt, err := ioutil.ReadFile("config.json")
-	if err != nil {
-		log.Fatalf("Failed reading config file: %v", err)
-		return nil
+	var token string
+	val, ok := os.LookupEnv("DISCORD_TOKEN")
+	if ok {
+		token = val
+	} else {
+		byt, err := ioutil.ReadFile("config.json")
+		if err != nil {
+			log.Fatalf("Failed reading config file: %v", err)
+			return nil
+		}
+		creds := BotCredentials{}
+		if err := json.Unmarshal(byt, &creds); err != nil {
+			log.Fatalf("Failed to unmarshal config file: %v", err)
+			return nil
+		}
+		token = creds.Token
 	}
-	creds := BotCredentials{}
-	if err := json.Unmarshal(byt, &creds); err != nil {
-		log.Fatalf("Failed to unmarshal config file: %v", err)
-		return nil
-	}
-	session, err := discordgo.New(fmt.Sprintf("Bot %s", creds.Token))
+
+	session, err := discordgo.New(fmt.Sprintf("Bot %s", token))
 	if err != nil {
 		log.Fatalf("Failed to create discord session: %v", err)
 		return nil
