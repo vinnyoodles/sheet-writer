@@ -35,5 +35,6 @@ func AppendSheet(args []string) {
 	}
 	wrapper := make([][]interface{}, 1)
 	wrapper[0] = values
+	fmt.Println("Wrote:", wrapper)
 	sheets.Append(sheetID, wrapper)
 }
