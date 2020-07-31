@@ -9,9 +9,34 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+	"encoding/json"
+	"fmt"
 )
 
+type Config struct {
+	DatabaseID string `json:"db_id"`
+}
+
 var RANGE_DELIMITER = ':'
+var DriveService *drive.Service
+var SheetsService *sheets.Service
+var SheetDatabaseID string
+
+func init() {
+	DriveService, SheetsService = CreateServices()
+	byt, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatalf("Failed reading config file: %v", err)
+		return
+	}
+	config := Config{}
+	if err := json.Unmarshal(byt, &config); err != nil {
+		log.Fatalf("Failed to unmarshall config file: %v", err)
+		return
+	}
+	SheetDatabaseID = config.DatabaseID
+}
+
 
 func Scopes() []string {
 	return []string{
@@ -46,10 +71,10 @@ func CreateServices() (*drive.Service, *sheets.Service) {
 	return driveService, sheetsService
 }
 
-func Fetch(drv *drive.Service) []string {
+func Fetch() []string {
 	output := []string{}
 	query := "mimeType='application/vnd.google-apps.spreadsheet'"
-	response, err := drv.Files.List().Q(query).Do()
+	response, err := DriveService.Files.List().Q(query).Do()
 	if err != nil {
 		return output
 	}
@@ -59,7 +84,24 @@ func Fetch(drv *drive.Service) []string {
 	return output
 }
 
-func Append(srv *sheets.Service, sheetID string, values [][]interface{}) bool {
+func FetchID(name string) string {
+	headers := Headers(SheetDatabaseID)
+	for i := 0; i < len(headers); i ++ {
+		if headers[i] != name {
+			continue
+		}
+		i += 97
+		target := fmt.Sprintf("%c2", rune(i))
+		result := Read(SheetDatabaseID, target)
+		if len(result) == 0 {
+			continue
+		}
+		return result[0]
+	}
+	return ""
+}
+
+func Append(sheetID string, values [][]interface{}) bool {
 	ctx := context.Background()
 	valueInputOption := "USER_ENTERED"
 	insertDataOption := "INSERT_ROWS"
@@ -75,22 +117,26 @@ func Append(srv *sheets.Service, sheetID string, values [][]interface{}) bool {
 		Range:          sheetRange,
 		Values:         values,
 	}
-	_, err := srv.Spreadsheets.Values.Append(sheetID, sheetRange, body).ValueInputOption(valueInputOption).InsertDataOption(insertDataOption).Context(ctx).Do()
+	_, err := SheetsService.Spreadsheets.Values.Append(sheetID, sheetRange, body).ValueInputOption(valueInputOption).InsertDataOption(insertDataOption).Context(ctx).Do()
 	if err != nil {
 		return false
 	}
 	return true
 }
 
-func Headers(srv *sheets.Service, id string) []string {
+func Headers(id string) []string {
+	return Read(id, "A1:1")
+}
+
+func Read(id string, sheetRange string) []string {
 	output := []string{}
-	sheetRange := "A1:1"
-	response, err := srv.Spreadsheets.Values.Get(id, sheetRange).Do()
+	response, err := SheetsService.Spreadsheets.Values.Get(id, sheetRange).Do()
 	if err != nil || len(response.Values) == 0 {
 		return output
 	}
-	headerRow := response.Values[0]
-	for _, cell := range headerRow {
+	// TODO: handle multi dimensional arrays
+	row := response.Values[0]
+	for _, cell := range row {
 		output = append(output, cell.(string))
 	}
 	return output

@@ -13,7 +13,7 @@ import (
 )
 
 type BotCredentials struct {
-	Token string `json:"token"`
+	Token string `json:"discord_token"`
 }
 
 type Commands struct {
@@ -25,11 +25,10 @@ type BotCommand struct {
 	Prefix   string `json:"prefix"`
 }
 
-var CommandMap map[string]BotCommand
+type CommandHandler func([]string)
 
-var FunctionMap = map[string]func([]string){
-	"AppendSheet": AppendSheet,
-}
+var CommandMap map[string]BotCommand
+var FunctionMap map[string]CommandHandler
 
 func init() {
 	byt, err := ioutil.ReadFile("commands.json")
@@ -44,17 +43,19 @@ func init() {
 		cmd := commands.Commands[i]
 		CommandMap[cmd.Prefix] = cmd
 	}
+
+	FunctionMap = make(map[string]CommandHandler)
 }
 
 func CreateSession() *discordgo.Session {
-	byt, err := ioutil.ReadFile("bot.json")
+	byt, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		log.Fatalf("Failed reading bot file: %v", err)
+		log.Fatalf("Failed reading config file: %v", err)
 		return nil
 	}
 	creds := BotCredentials{}
 	if err := json.Unmarshal(byt, &creds); err != nil {
-		log.Fatalf("Failed reading bot file: %v", err)
+		log.Fatalf("Failed to unmarshal config file: %v", err)
 		return nil
 	}
 	session, err := discordgo.New(fmt.Sprintf("Bot %s", creds.Token))
@@ -65,6 +66,10 @@ func CreateSession() *discordgo.Session {
 	session.AddHandler(messageListen)
 	session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
 	return session
+}
+
+func AddHandler(name string, fn CommandHandler) {
+	FunctionMap[name] = fn
 }
 
 func Run(session *discordgo.Session) {
@@ -82,10 +87,6 @@ func Run(session *discordgo.Session) {
 	session.Close()
 }
 
-func AppendSheet(args []string) {
-	fmt.Println(args)
-}
-
 func messageListen(session *discordgo.Session, message *discordgo.MessageCreate) {
 	if message.Author.ID == session.State.User.ID {
 		// Ignore bot messages
@@ -101,6 +102,5 @@ func messageListen(session *discordgo.Session, message *discordgo.MessageCreate)
 	if !ok {
 		return
 	}
-
 	FunctionMap[cmd.Function](tokens[1:])
 }
