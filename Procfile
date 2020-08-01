@@ -1,1 +1,1 @@
-web: bin/sheetwriter
+worker: bin/sheetwriter
