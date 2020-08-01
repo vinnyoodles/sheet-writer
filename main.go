@@ -26,9 +26,15 @@ func AppendSheet(args []string) {
 		return
 	}
 	values := make([]interface{}, len(args))
+
+	location, err := time.LoadLocation("US/Pacific")
+	t := time.Now()
+	if err == nil {
+		t = t.In(location)
+	}
 	for idx, val := range args {
 		if idx == 0 {
-			values[idx] = time.Now().Format(DateTimeFormat)
+			values[idx] = t.Format(DateTimeFormat)
 		} else {
 			values[idx] = val
 		}

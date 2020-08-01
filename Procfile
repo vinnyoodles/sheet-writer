@@ -1,1 +1,1 @@
-worker: bin/sheetwriter
+worker: ./bin/sheetwriter
