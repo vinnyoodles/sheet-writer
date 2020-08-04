@@ -17,7 +17,7 @@ func main() {
 }
 
 func AppendSheet(args []string) {
-	if len(args) < 2 {
+	if len(args) < 1 {
 		return
 	}
 	name := args[0]
