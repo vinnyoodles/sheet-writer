@@ -23,6 +23,7 @@ type Commands struct {
 type BotCommand struct {
 	Function string `json:"function"`
 	Prefix   string `json:"prefix"`
+	Name     string `json:"name"`
 }
 
 type CommandHandler func([]string)
@@ -110,5 +111,10 @@ func messageListen(session *discordgo.Session, message *discordgo.MessageCreate)
 	if !ok {
 		return
 	}
-	FunctionMap[cmd.Function](tokens[1:])
+	args := tokens[1:]
+	if len(cmd.Name) > 0 {
+		args = append([]string{cmd.Name}, args...)
+
+	}
+	FunctionMap[cmd.Function](args)
 }

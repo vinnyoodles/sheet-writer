@@ -3,6 +3,16 @@
   	{
   		"function": "AppendSheet",
   		"prefix": "@add"
+  	},
+  	{
+  		"function": "AppendSheet",
+  		"prefix": "@p",
+  		"name": "p"
+  	},
+  	{
+  		"function": "AppendSheet",
+  		"prefix": "@g",
+  		"name": "g"
   	}
   ]
 }
